@@ -16,29 +16,55 @@ permissions:
 
 jobs:
   unit-tests:
-    name: Unit Tests
-    runs-on: ubuntu-latest
+    name: Unit Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install build dependencies
+      - name: Install build dependencies (Ubuntu)
+        if: ${{ runner.os == 'Linux' }}
+        shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build libcurl4-openssl-dev
+          sudo apt-get install -y cmake ninja-build
+
+      - name: Install build dependencies (macOS)
+        if: ${{ runner.os == 'macOS' }}
+        shell: bash
+        run: |
+          brew update
+          brew install ninja
+
+      - name: Install build dependencies (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        shell: powershell
+        run: |
+          choco install ninja -y
 
       - name: Configure (unit tests)
+        shell: bash
         run: |
           cmake -S . -B build/default -G Ninja \
             -DCMAKE_BUILD_TYPE=Debug \
+            -DDBC_ENABLE_HTTPS=OFF \
             -DDBC_BUILD_TESTS=ON
 
       - name: Build (unit tests)
+        shell: bash
         run: |
           cmake --build build/default --target deathbycaptcha_tests
 
       - name: Run unit tests
+        shell: bash
         run: |
           ctest --test-dir build/default --output-on-failure -R deathbycaptcha_tests
 
