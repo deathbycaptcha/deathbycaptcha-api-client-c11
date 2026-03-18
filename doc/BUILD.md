@@ -178,3 +178,24 @@ Notes:
 - `src/cJSON.c` is vendored third-party code and is excluded from the report.
 - The `rm -rf` above is required — stale `.gcda` files from a previous build
   will cause a stamp-mismatch error.
+
+## GitHub Release Binaries (Linux and Windows)
+
+The workflow `.github/workflows/release-cli.yml` builds CLI binaries for:
+
+- Linux x86_64
+- Windows x86_64
+
+and uploads them as assets to the GitHub Release matching the pushed tag.
+
+Trigger it by creating and pushing a version tag:
+
+```bash
+git tag v4.7.0
+git push origin v4.7.0
+```
+
+Expected release assets:
+
+- `deathbycaptcha-linux-x86_64`
+- `deathbycaptcha-windows-x86_64.exe`

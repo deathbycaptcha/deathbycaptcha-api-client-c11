@@ -1,0 +1,89 @@
+name: Release CLI Binaries
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build and Upload (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset_name: deathbycaptcha-linux-x86_64
+            binary_path: build/release/bin/deathbycaptcha
+          - os: windows-latest
+            asset_name: deathbycaptcha-windows-x86_64.exe
+            binary_path: build/release/bin/deathbycaptcha.exe
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure release tag is available for manual runs
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        shell: bash
+        run: |
+          if [[ ! "${GITHUB_REF_NAME}" =~ ^v[0-9].* ]]; then
+            echo "workflow_dispatch must run from a version tag ref (e.g. v4.7.0)."
+            exit 1
+          fi
+
+      - name: Install build dependencies (Linux)
+        if: ${{ runner.os == 'Linux' }}
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build
+
+      - name: Install build dependencies (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        shell: powershell
+        run: |
+          choco install ninja -y
+
+      - name: Setup MSVC toolchain (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure (release cli)
+        shell: bash
+        run: |
+          cmake -S . -B build/release -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DDBC_BUILD_CLIENT=ON \
+            -DDBC_BUILD_SHARED=OFF \
+            -DDBC_BUILD_EXAMPLE=OFF \
+            -DDBC_BUILD_TESTS=OFF \
+            -DDBC_BUILD_INTEGRATION_TESTS=OFF \
+            -DDBC_ENABLE_HTTPS=OFF
+
+      - name: Build CLI binary
+        shell: bash
+        run: |
+          cmake --build build/release --target deathbycaptcha_cli
+
+      - name: Stage release asset
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          Copy-Item "${{ matrix.binary_path }}" "dist/${{ matrix.asset_name }}"
+
+      - name: Publish asset to GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          replacesArtifacts: false
+          generateReleaseNotes: true
+          artifacts: dist/${{ matrix.asset_name }}
