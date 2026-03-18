@@ -11,6 +11,21 @@ It provides:
 The project uses a modern multiplatform CMake workflow for Linux, macOS and
 Windows.
 
+## CI Status Badges
+
+| Workflow | Status |
+|---|---|
+| CI (unit + integration) | [![CI](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/ci.yml) |
+| CI 32-bit | [![CI 32-bit](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/ci-32bit.yml/badge.svg?branch=master)](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/ci-32bit.yml) |
+| Release CLI Binaries | [![Release CLI Binaries](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/release-cli.yml/badge.svg)](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/release-cli.yml) |
+| Coverage Badge Pipeline | [![Coverage Badge](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/coverage-badge.yml/badge.svg?branch=master)](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/coverage-badge.yml) |
+| Coverage (%) | ![Coverage %](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/releases/download/badges/coverage.svg) |
+
+Coverage badge notes:
+- No external service is used.
+- No workflow commits back to `master`.
+- The SVG is uploaded as a release asset under tag `badges`.
+
 ## Project Layout
 
 - `src/`: core library and CLI source code.

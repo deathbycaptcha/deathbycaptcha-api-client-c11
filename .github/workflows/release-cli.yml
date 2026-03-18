@@ -20,6 +20,9 @@ jobs:
           - os: ubuntu-latest
             asset_name: deathbycaptcha-linux-x86_64
             binary_path: build/release/bin/deathbycaptcha
+          - os: macos-latest
+            asset_name: deathbycaptcha-macos-x86_64
+            binary_path: build/release/bin/deathbycaptcha
           - os: windows-latest
             asset_name: deathbycaptcha-windows-x86_64.exe
             binary_path: build/release/bin/deathbycaptcha.exe
@@ -49,6 +52,13 @@ jobs:
         shell: powershell
         run: |
           choco install ninja -y
+
+      - name: Install build dependencies (macOS)
+        if: ${{ runner.os == 'macOS' }}
+        shell: bash
+        run: |
+          brew update
+          brew install ninja
 
       - name: Setup MSVC toolchain (Windows)
         if: ${{ runner.os == 'Windows' }}

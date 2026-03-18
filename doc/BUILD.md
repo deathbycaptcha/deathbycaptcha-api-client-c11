@@ -179,11 +179,12 @@ Notes:
 - The `rm -rf` above is required — stale `.gcda` files from a previous build
   will cause a stamp-mismatch error.
 
-## GitHub Release Binaries (Linux and Windows)
+## GitHub Release Binaries (Linux, macOS, and Windows)
 
 The workflow `.github/workflows/release-cli.yml` builds CLI binaries for:
 
 - Linux x86_64
+- macOS x86_64
 - Windows x86_64
 
 and uploads them as assets to the GitHub Release matching the pushed tag.
@@ -198,4 +199,16 @@ git push origin v4.7.0
 Expected release assets:
 
 - `deathbycaptcha-linux-x86_64`
+- `deathbycaptcha-macos-x86_64`
 - `deathbycaptcha-windows-x86_64.exe`
+
+## Coverage Badge (No External Service)
+
+Workflow `.github/workflows/coverage-badge.yml` runs coverage and publishes
+`coverage.svg` as a GitHub release asset under tag `badges`.
+
+Design constraints satisfied:
+
+- No external badge provider is used.
+- No bot commits are pushed back to `master`.
+- Coverage percentage is rendered directly into an SVG generated in CI.
