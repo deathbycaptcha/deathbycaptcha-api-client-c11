@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build libcurl4-openssl-dev
+
+      - name: Configure (unit tests)
+        run: |
+          cmake -S . -B build/default -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DDBC_BUILD_TESTS=ON
+
+      - name: Build (unit tests)
+        run: |
+          cmake --build build/default --target deathbycaptcha_tests
+
+      - name: Run unit tests
+        run: |
+          ctest --test-dir build/default --output-on-failure -R deathbycaptcha_tests
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    if: ${{ secrets.DBC_USERNAME != '' && secrets.DBC_PASSWORD != '' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build libcurl4-openssl-dev
+
+      - name: Create integration .env from repository secrets
+        run: |
+          cat > .env << 'EOF'
+          DBC_USERNAME=${{ secrets.DBC_USERNAME }}
+          DBC_PASSWORD=${{ secrets.DBC_PASSWORD }}
+          EOF
+          chmod 600 .env
+
+      - name: Configure (integration tests)
+        run: |
+          cmake -S . -B build/integration -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DDBC_BUILD_TESTS=ON \
+            -DDBC_BUILD_INTEGRATION_TESTS=ON \
+            -DDBC_ENABLE_HTTPS=ON
+
+      - name: Build CLI for integration
+        run: |
+          cmake --build build/integration --target deathbycaptcha
+
+      - name: Run integration test
+        run: |
+          ctest --test-dir build/integration -V -R deathbycaptcha_cli_integration
+
+      - name: Upload integration test logs on failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-logs
+          path: |
+            build/integration/Testing/Temporary/
+            build/integration/LastTest.log
+          if-no-files-found: ignore

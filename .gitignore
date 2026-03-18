@@ -1,0 +1,75 @@
+# Build directories
+/build/
+/lib/
+/bin/
+
+# Make-generated objects in source tree
+*.o
+*.obj
+*.lo
+*.la
+*.a
+*.lib
+
+# Shared libraries and executables
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+*.app
+*.exp
+*.ilk
+*.pdb
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+install_manifest_*.txt
+compile_commands.json
+CTestTestfile.cmake
+Testing/
+
+# Ninja
+.ninja_deps
+.ninja_log
+build.ninja
+
+# Misc build helpers
+*.d
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Local integration credentials
+.env
+.env.integration
+
+# Packaging artifacts
+*.zip
+*.tar
+*.tar.gz
+
+# Coverage artifacts
+*.gcov
+*.gcov.json.gz
+coverage.xml
+coverage.info
+coverage_html/
+
+# Local CLI output files
+id.txt
+answer.txt
+balance.txt
+.gitlab-ci-local/

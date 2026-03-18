@@ -1,0 +1,99 @@
+# DeathByCaptcha C library – GitLab CI
+# Stages: build → test (includes coverage collection)
+
+image: ubuntu:24.04
+
+variables:
+  DEBIAN_FRONTEND: noninteractive
+  BUILD_DIR: build/ci-coverage
+
+stages:
+  - build
+  - test
+
+# ──────────────────────────────────────────────────────────────────
+# Stage 1 – configure & compile (coverage-instrumented debug build)
+# ──────────────────────────────────────────────────────────────────
+build:
+  stage: build
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq gcc cmake ninja-build
+  script:
+    - cmake -G Ninja -B "$BUILD_DIR"
+        -DCMAKE_BUILD_TYPE=Debug
+        -DDBC_BUILD_TESTS=ON
+        -DDBC_ENABLE_COVERAGE=ON
+        -DDBC_BUILD_EXAMPLE=OFF
+        -DDBC_BUILD_SHARED=OFF
+    - cmake --build "$BUILD_DIR"
+  artifacts:
+    # Pass the full build tree (includes .gcno files) to the test stage
+    paths:
+      - "$BUILD_DIR/"
+    expire_in: 1 day
+
+# ──────────────────────────────────────────────────────────────────
+# Stage 2 – run tests, collect coverage, publish reports
+# ──────────────────────────────────────────────────────────────────
+test:coverage:
+  stage: test
+  needs: [build]
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq cmake lcov gcovr
+  script:
+    # ── 1. Run tests (JUnit XML → GitLab test report widget) ──────
+    - cd "$BUILD_DIR"
+    - ctest --output-on-failure --output-junit test-report.xml
+    - cd "$CI_PROJECT_DIR"
+
+    # ── 2. Collect .gcda data into a single coverage.info ─────────
+    - lcov --capture
+        --directory "$BUILD_DIR"
+        --output-file coverage.info
+
+    # Remove test helpers, fake stubs, vendored JSON parser, and headers outside src/
+    - lcov --remove coverage.info
+        '/usr/*'
+        '*/tests/*'
+        '*/fake_curl/*'
+        '*/src/cJSON*'
+        --ignore-errors unused
+        --output-file coverage.info
+
+    # ── 3. Console summary (GitLab reads the % from this line) ────
+    - lcov --list coverage.info
+
+    # ── 4. Cobertura XML → GitLab diff-coverage widget ────────────
+    - gcovr
+        --root "$CI_PROJECT_DIR"
+        --filter 'src/'
+        --exclude 'src/cJSON'
+        --exclude-unreachable-branches
+        --xml-pretty
+        --print-summary
+        --output coverage.xml
+        "$BUILD_DIR"
+
+    # ── 5. HTML report (browsable artifact) ───────────────────────
+    - genhtml coverage.info
+        --output-directory coverage_html
+        --legend
+        --title "DeathByCaptcha C – Coverage"
+
+  # GitLab parses this regex from the job log to display coverage %
+  # lcov prints: "lines......: 87.3% (123 of 141 lines)"
+  coverage: '/lines......: \d+\.\d+%/'
+
+  artifacts:
+    when: always
+    paths:
+      - coverage_html/   # HTML report (download or GitLab Pages)
+      - coverage.xml     # Cobertura for diff coverage
+    reports:
+      junit: "$BUILD_DIR/test-report.xml"
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    expire_in: 1 week
