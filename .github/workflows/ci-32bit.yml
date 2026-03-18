@@ -1,0 +1,58 @@
+name: CI 32-bit
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux-i386:
+    name: Linux i386 Build and Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install 32-bit toolchain and build deps
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \
+            ninja-build \
+            gcc-multilib \
+            libc6-dev-i386
+
+      - name: Configure (32-bit)
+        run: |
+          cmake -S . -B build/i386 -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_FLAGS=-m32 \
+            -DCMAKE_EXE_LINKER_FLAGS=-m32 \
+            -DCMAKE_SHARED_LINKER_FLAGS=-m32 \
+            -DDBC_ENABLE_HTTPS=OFF \
+            -DDBC_BUILD_TESTS=ON \
+            -DDBC_BUILD_INTEGRATION_TESTS=OFF
+
+      - name: Build unit tests
+        run: |
+          cmake --build build/i386 --target deathbycaptcha_tests
+
+      - name: Verify binary architecture
+        run: |
+          file build/i386/bin/deathbycaptcha_tests
+          file build/i386/bin/deathbycaptcha_tests | grep -E "ELF 32-bit"
+
+      - name: Run unit tests
+        run: |
+          ctest --test-dir build/i386 --output-on-failure -R deathbycaptcha_tests
