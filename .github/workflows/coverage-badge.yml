@@ -84,16 +84,36 @@ jobs:
           </svg>
           EOF
 
-      - name: Ensure badges release exists
+      - name: Publish coverage badge to badges branch
+        if: github.event_name != 'pull_request'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if ! gh release view badges >/dev/null 2>&1; then
-            gh release create badges --title "badges" --notes "Auto-updated CI badges assets"
+          set -euo pipefail
+
+          repo_url="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          workdir="$(mktemp -d)"
+
+          git clone --depth 1 --branch badges "$repo_url" "$workdir" || {
+            git clone --depth 1 "$repo_url" "$workdir"
+            cd "$workdir"
+            git checkout --orphan badges
+            git rm -rf . >/dev/null 2>&1 || true
+            touch .gitkeep
+            git add .gitkeep
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Initialize badges branch'
+            git push origin badges
+          }
+
+          cd "$workdir"
+          mkdir -p .github/badges
+          cp "${{ github.workspace }}/coverage.svg" .github/badges/coverage.svg
+          git add .github/badges/coverage.svg
+
+          if git diff --cached --quiet -- .github/badges/coverage.svg; then
+            echo "Coverage badge SVG unchanged."
+            exit 0
           fi
 
-      - name: Upload coverage badge asset
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release upload badges coverage.svg --clobber
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Update coverage badge SVG'
+          git push origin badges

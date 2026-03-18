@@ -205,7 +205,7 @@ Expected release assets:
 ## Coverage Badge (No External Service)
 
 Workflow `.github/workflows/coverage-badge.yml` runs coverage and publishes
-`coverage.svg` as a GitHub release asset under tag `badges`.
+`coverage.svg` to the repository `badges` branch at `.github/badges/coverage.svg`.
 
 Design constraints satisfied:
 

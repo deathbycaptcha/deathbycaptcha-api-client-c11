@@ -19,19 +19,17 @@ Windows.
 | CI 32-bit | [![CI 32-bit](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/ci-32bit.yml/badge.svg?branch=master)](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/ci-32bit.yml) |
 | Release CLI Binaries | [![Release CLI Binaries](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/release-cli.yml/badge.svg)](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/release-cli.yml) |
 | Coverage Badge Pipeline | [![Coverage Badge](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/coverage-badge.yml/badge.svg?branch=master)](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/coverage-badge.yml) |
-| Coverage (%) | ![Coverage %](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/releases/download/badges/coverage.svg) |
+| Coverage (%) | ![Coverage %](https://raw.githubusercontent.com/deathbycaptcha/deathbycaptcha-api-client-c11/badges/.github/badges/coverage.svg) |
 
 Coverage badge notes:
 - No external service is used.
 - No workflow commits back to `master`.
-- The SVG is uploaded as a release asset under tag `badges`.
+- The SVG is published to the `badges` branch under `.github/badges/coverage.svg`.
 
 ## Project Layout
 
 - `src/`: core library and CLI source code.
 - `doc/`: build and usage guides, plus dynamic loading samples.
-- `deathbycaptcha-agent-api-metadata/`: API metadata submodule with formal HTTP
-  and socket specifications.
 - `CMakeLists.txt`, `CMakePresets.json`: modern cross-platform build system.
 
 ## Build
@@ -66,9 +64,9 @@ cmake --build --preset release
 - [Examples guide](doc/EXAMPLES.md)
 - [Socket usage sample](doc/lib_usage_socket_example.c)
 - [HTTPS usage sample](doc/lib_usage_https_example.c)
-- [Agent API metadata overview](deathbycaptcha-agent-api-metadata/README.md)
-- [Socket API specification](deathbycaptcha-agent-api-metadata/spec/openapi/sockets.yaml)
-- [HTTP API specification](deathbycaptcha-agent-api-metadata/spec/openapi/http.yaml)
+- [Agent API metadata overview](https://github.com/deathbycaptcha/deathbycaptcha-agent-api-metadata)
+- [Socket API specification](https://github.com/deathbycaptcha/deathbycaptcha-agent-api-metadata/blob/main/spec/openapi/sockets.yaml)
+- [HTTP API specification](https://github.com/deathbycaptcha/deathbycaptcha-agent-api-metadata/blob/main/spec/openapi/http.yaml)
 
 ## Notes
 
