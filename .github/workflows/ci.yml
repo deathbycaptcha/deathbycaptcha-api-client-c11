@@ -70,11 +70,15 @@ jobs:
 
       - name: Create integration .env from repository secrets
         if: ${{ steps.secrets_check.outputs.enabled == 'true' }}
+        env:
+          DBC_USERNAME_SECRET: ${{ secrets.DBC_USERNAME }}
+          DBC_PASSWORD_SECRET: ${{ secrets.DBC_PASSWORD }}
         run: |
-          cat > .env << 'EOF'
-          DBC_USERNAME=${{ secrets.DBC_USERNAME }}
-          DBC_PASSWORD=${{ secrets.DBC_PASSWORD }}
-          EOF
+          # Write source-able assignments with safe escaping for special chars.
+          {
+            printf 'DBC_USERNAME=%q\n' "$DBC_USERNAME_SECRET"
+            printf 'DBC_PASSWORD=%q\n' "$DBC_PASSWORD_SECRET"
+          } > .env
           chmod 600 .env
 
       - name: Configure (integration tests)
