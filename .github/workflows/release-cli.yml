@@ -45,24 +45,34 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build
+          sudo apt-get install -y cmake ninja-build libcurl4-openssl-dev
 
       - name: Install build dependencies (Windows)
         if: ${{ runner.os == 'Windows' }}
         shell: powershell
         run: |
           choco install ninja -y
+          vcpkg install curl:x64-windows
 
       - name: Install build dependencies (macOS)
         if: ${{ runner.os == 'macOS' }}
         shell: bash
         run: |
           brew update
-          brew install ninja
+          brew install ninja curl
 
       - name: Setup MSVC toolchain (Windows)
         if: ${{ runner.os == 'Windows' }}
         uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Set curl hint paths
+        shell: bash
+        run: |
+          if [[ "${{ runner.os }}" == "macOS" ]]; then
+            echo "CURL_ROOT=$(brew --prefix curl)" >> "$GITHUB_ENV"
+          elif [[ "${{ runner.os }}" == "Windows" ]]; then
+            echo "CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> "$GITHUB_ENV"
+          fi
 
       - name: Configure (release cli)
         shell: bash
@@ -74,7 +84,9 @@ jobs:
             -DDBC_BUILD_EXAMPLE=OFF \
             -DDBC_BUILD_TESTS=OFF \
             -DDBC_BUILD_INTEGRATION_TESTS=OFF \
-            -DDBC_ENABLE_HTTPS=OFF
+            -DDBC_ENABLE_HTTPS=ON \
+            ${CURL_ROOT:+-DCURL_ROOT="$CURL_ROOT"} \
+            ${CMAKE_TOOLCHAIN_FILE:+-DCMAKE_TOOLCHAIN_FILE="$CMAKE_TOOLCHAIN_FILE"}
 
       - name: Build CLI binary
         shell: bash
@@ -91,9 +103,9 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
           allowUpdates: true
           artifactErrorsFailBuild: true
           replacesArtifacts: false
-          generateReleaseNotes: true
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
           artifacts: dist/${{ matrix.asset_name }}
