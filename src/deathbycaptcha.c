@@ -436,6 +436,15 @@ static char *dbc_url_decode(const char *src)
     return out;
 }
 
+static char *dbc_strtok_portable(char *str, const char *delim, char **saveptr)
+{
+#ifdef _WIN32
+    return strtok_s(str, delim, saveptr);
+#else
+    return strtok_r(str, delim, saveptr);
+#endif
+}
+
 static cJSON *dbc_parse_urlencoded_response(const char *body)
 {
     cJSON *obj = cJSON_CreateObject();
@@ -452,8 +461,8 @@ static cJSON *dbc_parse_urlencoded_response(const char *body)
 
     int added = 0;
     char *saveptr = NULL;
-    char *pair = strtok_r(tmp, "&\r\n", &saveptr);
-    for (; NULL != pair; pair = strtok_r(NULL, "&\r\n", &saveptr)) {
+    char *pair = dbc_strtok_portable(tmp, "&\r\n", &saveptr);
+    for (; NULL != pair; pair = dbc_strtok_portable(NULL, "&\r\n", &saveptr)) {
         char *eq = strchr(pair, '=');
         if (NULL == eq) {
             continue;
