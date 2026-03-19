@@ -16,10 +16,12 @@ Windows.
 | Workflow | Status |
 |---|---|
 | CI (unit + integration) | [![CI](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/ci.yml) |
+| Tests Linux | [![Tests Linux](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/test-linux.yml/badge.svg?branch=master)](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/test-linux.yml) |
+| Tests Windows | [![Tests Windows](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/test-windows.yml/badge.svg?branch=master)](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/test-windows.yml) |
+| Tests macOS | [![Tests macOS](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/test-macos.yml/badge.svg?branch=master)](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/test-macos.yml) |
 | CI 32-bit | [![CI 32-bit](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/ci-32bit.yml/badge.svg?branch=master)](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/ci-32bit.yml) |
 | Release CLI Binaries | [![Release CLI Binaries](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/release-cli.yml/badge.svg)](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/release-cli.yml) |
-| Coverage Badge Pipeline | [![Coverage Badge](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/coverage-badge.yml/badge.svg?branch=master)](https://github.com/deathbycaptcha/deathbycaptcha-api-client-c11/actions/workflows/coverage-badge.yml) |
-| Coverage (%) | ![Coverage %](https://raw.githubusercontent.com/deathbycaptcha/deathbycaptcha-api-client-c11/badges/.github/badges/coverage.svg) |
+| Coverage | ![Coverage %](https://raw.githubusercontent.com/deathbycaptcha/deathbycaptcha-api-client-c11/badges/.github/badges/coverage.svg) |
 
 Coverage badge notes:
 - No external service is used.

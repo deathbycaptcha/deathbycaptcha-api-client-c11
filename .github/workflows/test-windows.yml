@@ -1,0 +1,47 @@
+name: Tests Windows
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests-windows:
+    name: Unit Tests (Windows)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        shell: powershell
+        run: |
+          choco install ninja -y
+
+      - name: Configure (unit tests)
+        shell: bash
+        run: |
+          cmake -S . -B build/windows -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DDBC_ENABLE_HTTPS=OFF \
+            -DDBC_BUILD_TESTS=ON
+
+      - name: Build (unit tests)
+        shell: bash
+        run: |
+          cmake --build build/windows --target deathbycaptcha_tests
+
+      - name: Run unit tests
+        shell: bash
+        run: |
+          ctest --test-dir build/windows --output-on-failure -R deathbycaptcha_tests
