@@ -76,4 +76,8 @@ cmake --build --preset release
 - Transport is selected explicitly by the caller via `dbc_set_transport(...)`.
 - HTTPS mode (`https://api.dbcapi.me/api`) requires a build with libcurl
   support.
+
+## Responsible Use
+
+See [Responsible Use Agreement](RESPONSIBLE_USE.md).
 - The POSIX code path uses pthread mutexes for Linux and macOS portability.
