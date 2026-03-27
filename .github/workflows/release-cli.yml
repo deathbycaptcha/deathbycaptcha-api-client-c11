@@ -11,21 +11,37 @@ permissions:
 
 jobs:
   build-and-release:
-    name: Build and Upload (${{ matrix.os }})
+    name: Build and Upload (${{ matrix.asset_name }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
-            asset_name: deathbycaptcha-linux-x86_64
+            asset_name: deathbycaptcha-cli-linux-x86_64
             binary_path: build/release/bin/deathbycaptcha
+            extra_cmake_flags: ""
+          - os: ubuntu-latest
+            asset_name: deathbycaptcha-cli-linux-x86
+            binary_path: build/release/bin/deathbycaptcha
+            extra_cmake_flags: "-DCMAKE_C_FLAGS=-m32"
+            linux_i386: true
           - os: macos-latest
-            asset_name: deathbycaptcha-macos-x86_64
+            asset_name: deathbycaptcha-cli-macos-x86_64
             binary_path: build/release/bin/deathbycaptcha
+            extra_cmake_flags: ""
           - os: windows-latest
-            asset_name: deathbycaptcha-windows-x86_64.exe
+            asset_name: deathbycaptcha-cli-windows-x86_64.exe
             binary_path: build/release/bin/deathbycaptcha.exe
+            vcpkg_triplet: x64-windows
+            msvc_arch: x64
+            extra_cmake_flags: ""
+          - os: windows-latest
+            asset_name: deathbycaptcha-cli-windows-x86.exe
+            binary_path: build/release/bin/deathbycaptcha.exe
+            vcpkg_triplet: x86-windows
+            msvc_arch: x86
+            extra_cmake_flags: ""
 
     steps:
       - name: Checkout
@@ -40,19 +56,27 @@ jobs:
             exit 1
           fi
 
-      - name: Install build dependencies (Linux)
-        if: ${{ runner.os == 'Linux' }}
+      - name: Install build dependencies (Linux x86_64)
+        if: ${{ runner.os == 'Linux' && !matrix.linux_i386 }}
         shell: bash
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build libcurl4-openssl-dev
+
+      - name: Install build dependencies (Linux x86 / i386)
+        if: ${{ runner.os == 'Linux' && matrix.linux_i386 }}
+        shell: bash
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build gcc-multilib libcurl4-openssl-dev:i386
 
       - name: Install build dependencies (Windows)
         if: ${{ runner.os == 'Windows' }}
         shell: powershell
         run: |
           choco install ninja -y
-          vcpkg install curl:x64-windows
+          vcpkg install curl:${{ matrix.vcpkg_triplet }}
 
       - name: Install build dependencies (macOS)
         if: ${{ runner.os == 'macOS' }}
@@ -64,6 +88,8 @@ jobs:
       - name: Setup MSVC toolchain (Windows)
         if: ${{ runner.os == 'Windows' }}
         uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.msvc_arch }}
 
       - name: Set curl hint paths
         shell: bash
@@ -72,6 +98,7 @@ jobs:
             echo "CURL_ROOT=$(brew --prefix curl)" >> "$GITHUB_ENV"
           elif [[ "${{ runner.os }}" == "Windows" ]]; then
             echo "CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> "$GITHUB_ENV"
+            echo "VCPKG_TARGET_TRIPLET=${{ matrix.vcpkg_triplet }}" >> "$GITHUB_ENV"
           fi
 
       - name: Configure (release cli)
@@ -85,8 +112,10 @@ jobs:
             -DDBC_BUILD_TESTS=OFF \
             -DDBC_BUILD_INTEGRATION_TESTS=OFF \
             -DDBC_ENABLE_HTTPS=ON \
+            ${{ matrix.extra_cmake_flags }} \
             ${CURL_ROOT:+-DCURL_ROOT="$CURL_ROOT"} \
-            ${CMAKE_TOOLCHAIN_FILE:+-DCMAKE_TOOLCHAIN_FILE="$CMAKE_TOOLCHAIN_FILE"}
+            ${CMAKE_TOOLCHAIN_FILE:+-DCMAKE_TOOLCHAIN_FILE="$CMAKE_TOOLCHAIN_FILE"} \
+            ${VCPKG_TARGET_TRIPLET:+-DVCPKG_TARGET_TRIPLET="$VCPKG_TARGET_TRIPLET"}
 
       - name: Build CLI binary
         shell: bash

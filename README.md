@@ -137,17 +137,17 @@ All clients share the same interface. Below is a summary of every available func
 
 <a id="captcha-methods"></a>
 
-| Function | Signature | Returns | Description |
-|---|---|---|---|
-| `dbc_get_balance()` | `dbc_get_balance(client)` | `double` | Return the current account balance in US cents. |
-| `dbc_decode_file()` | `dbc_decode_file(client, captcha, FILE*, timeout)` | `int` (0 = ok) | Upload an image CAPTCHA from a file stream and poll until solved. |
-| `dbc_decode()` | `dbc_decode(client, captcha, buf, buflen, timeout)` | `int` (0 = ok) | Upload an image CAPTCHA from a memory buffer and poll until solved. |
-| `dbc_decode_recaptcha_v2()` | `dbc_decode_recaptcha_v2(client, captcha, sitekey, pageurl, proxy, proxytype, timeout)` | `int` (0 = ok) | Solve reCAPTCHA v2 (type 4) and return a token. |
-| `dbc_decode_recaptcha_v3()` | `dbc_decode_recaptcha_v3(client, captcha, sitekey, pageurl, action, min_score, proxy, proxytype, timeout)` | `int` (0 = ok) | Solve reCAPTCHA v3 (type 5) and return a scored token. |
-| `dbc_decode_recaptcha_enterprise()` | `dbc_decode_recaptcha_enterprise(client, captcha, sitekey, pageurl, proxy, proxytype, timeout)` | `int` (0 = ok) | Solve reCAPTCHA v2 Enterprise (type 25) and return a token. |
-| `dbc_decode_token()` | `dbc_decode_token(client, captcha, type, params_field, params_json, timeout)` | `int` (0 = ok) | Generic token solver — handles any token-based type by passing the JSON params and field name. |
-| `dbc_get_captcha()` | `dbc_get_captcha(client, captcha, id)` | `int` (0 = ok) | Fetch the status and result of a previously uploaded CAPTCHA by its numeric ID. |
-| `dbc_report()` | `dbc_report(client, captcha)` | `int` (0 = ok) | Report a CAPTCHA as incorrectly solved to request a refund. Only report genuine errors. |
+| Function | Returns | Description |
+|---|---|---|
+| `dbc_get_balance()` | `double` | Current account balance in US cents. |
+| `dbc_decode_file()` | `0` / `-1` | Upload an image CAPTCHA from a `FILE*` stream and poll until solved. `timeout` 0 → 60 s. |
+| `dbc_decode()` | `0` / `-1` | Upload an image CAPTCHA from a memory buffer and poll until solved. `timeout` 0 → 60 s. |
+| `dbc_decode_recaptcha_v2()` | `0` / `-1` | Solve reCAPTCHA v2 (type 4). Takes `sitekey`, `pageurl`, optional `proxy`/`proxytype`. `timeout` 0 → 120 s. |
+| `dbc_decode_recaptcha_v3()` | `0` / `-1` | Solve reCAPTCHA v3 (type 5). Takes `sitekey`, `pageurl`, `action`, `min_score`, optional proxy. `timeout` 0 → 120 s. |
+| `dbc_decode_recaptcha_enterprise()` | `0` / `-1` | Solve reCAPTCHA v2 Enterprise (type 25). Takes `sitekey`, `pageurl`, optional proxy. `timeout` 0 → 120 s. |
+| `dbc_decode_token()` | `0` / `-1` | Generic token solver. Takes numeric `type`, `params_field` name, and `params_json` string. `timeout` 0 → 120 s. |
+| `dbc_get_captcha()` | `0` / `-1` | Fetch the status and result of a previously uploaded CAPTCHA by numeric `id`. |
+| `dbc_report()` | `0` / `-1` | Report a CAPTCHA as incorrectly solved to request a refund. Only report genuine errors. |
 
 ### 📬 CAPTCHA Result Structure
 
