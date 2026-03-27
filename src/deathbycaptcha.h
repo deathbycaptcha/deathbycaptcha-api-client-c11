@@ -33,7 +33,7 @@ extern "C"
 #endif  /* __cplusplus */
 
 
-#define DBC_API_VERSION "DBC/C v4.7.0"
+#define DBC_API_VERSION "DBC/C v4.7.1"
 #define DBC_SOFTWARE_VENDOR 0
 
 #define DBC_HOST "api.dbcapi.me"
@@ -51,6 +51,7 @@ extern "C"
 
 
 #define DBC_TIMEOUT 60
+#define DBC_TOKEN_TIMEOUT 120
 #define DBC_INTERVALS_LEN 9
 extern const int DBC_INTERVALS[DBC_INTERVALS_LEN];
 #define DBC_DFLT_INTERVAL 3
@@ -183,6 +184,25 @@ extern DBC_DLL_PUBLIC int dbc_decode_recaptcha_enterprise(dbc_client *client,
                                                            const char *proxy,
                                                            const char *proxytype,
                                                            unsigned int timeout);
+
+/**
+ * Generic token-based CAPTCHA decode for any type not covered by a specific
+ * wrapper (e.g. Turnstile type 12, GeeTest v3 type 8, Amazon WAF type 16).
+ *
+ * captcha_type  - type ID (see DBC_CAPTCHA_TYPE_* or the API docs).
+ * params_field  - JSON field name expected by the API (e.g. "turnstile_params").
+ * params_json   - JSON object string with the challenge parameters,
+ *                 e.g. "{\"sitekey\":\"...\",\"pageurl\":\"...\"}"
+ * timeout       - polling timeout in seconds (0 uses DBC_TOKEN_TIMEOUT).
+ *
+ * Returns 0 on success, -1 on failure or timeout.
+ */
+extern DBC_DLL_PUBLIC int dbc_decode_token(dbc_client *client,
+                                           dbc_captcha *captcha,
+                                           unsigned int captcha_type,
+                                           const char *params_field,
+                                           const char *params_json,
+                                           unsigned int timeout);
 
 /**
  * Upload a CAPTCHA from buffer and poll for its status with desired timeout

@@ -39,7 +39,7 @@ void _show_usage_help(char *bin)
     printf("%s -a AUTHTOKEN -c CAPTCHA_FILE_NAME [-t TIMEOUT] [-d WORK_DIR]\n", bin);
     printf("If solved, the CAPTCHA ID will be saved in id.txt, the CAPTCHA text will be saved in answer.txt, and both ID and text will be printed out on the standard output separated by a space.\n");
     printf("CAPTCHA_FILE_NAME can be '-', in that case the image itself will be read from standard input.\n");
-    printf("TIMEOUT option defines CAPTCHA solving timeout in seconds (default is 60 seconds).\n");
+    printf("TIMEOUT option defines CAPTCHA solving timeout in seconds (default: 60s for image CAPTCHAs, 120s for token-based types).\n");
     printf("If WORK_DIR option is defined, the id.txt and answer files will be saved to that directory, otherwise they will be saved to the working directory.\n\n");
 
     printf("To report an incorrectly solved CAPTCHA, run\n");
@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
         int token_mode = DBC_TOKEN_MODE_NONE;
         unsigned int transport = DBC_TRANSPORT_SOCKET;
         double min_score = 0.0;
-        unsigned int is_verbose = 1, captcha_id = 0, timeout = DBC_TIMEOUT;
+        unsigned int is_verbose = 1, captcha_id = 0, timeout = 0;
 
         for (i = 1; i < argc; i++) {
             if (!strcmp("-v", argv[i])) {
@@ -244,8 +244,6 @@ int main(int argc, char *argv[])
             } else if (!strcmp("-t", argv[i])) {
                 if (!sscanf(argv[++i], "%u", &timeout)) {
                     fprintf(stderr, "Invalid timeout %s, using the default one\n", argv[i]);
-                } else if (!timeout) {
-                    timeout = DBC_TIMEOUT;
                 }
             } else if (!strcmp("-n", argv[i])) {
                 if (!sscanf(argv[++i], "%u", &captcha_id)) {

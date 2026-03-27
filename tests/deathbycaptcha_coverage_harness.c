@@ -600,6 +600,128 @@ int main(void)
                       "recaptcha enterprise with proxy over socket");
     dbc_close_captcha(&cap);
 
+    /* ================================================================
+     * Default-timeout verification per captcha type (timeout = 0).
+     *
+     * mock_sleep advances g_now deterministically, so we can assert the
+     * exact number of simulated seconds the library consumed:
+     *   - image / type 0       → DBC_TIMEOUT        (60 s)
+     *   - all token-based types → DBC_TOKEN_TIMEOUT (120 s)
+     *
+     * Each sub-test:
+     *   1. resets g_now to a known baseline
+     *   2. queues enough "pending" socket responses to exhaust the loop
+     *   3. calls the function with timeout = 0
+     *   4. asserts return == -1 (timed out, no text received)
+     *   5. asserts elapsed simulated time >= expected default
+     *      and < expected default + DBC_DFLT_INTERVAL (one extra tick)
+     *
+     * With DBC_INTERVALS = {1,1,2,3,2,2,3,2,2} (sum 18 s) and
+     * DBC_DFLT_INTERVAL = 3 s thereafter:
+     *   image  needs 1 upload + 23 polls → g_now advances 60 s exactly
+     *   token  needs 1 upload + 43 polls → g_now advances 120 s exactly
+     * ================================================================ */
+    {
+        time_t t_before;
+        int i;
+
+        ok &= expect_true(0 == dbc_set_transport(&client, DBC_TRANSPORT_SOCKET),
+                          "socket transport set for default-timeout tests");
+
+        /* --- dbc_decode (image, type 0) → DBC_TIMEOUT = 60 s --- */
+        g_now = 5000;  t_before = g_now;
+        reset_socket_queue();
+        for (i = 0; i < 30; i++)
+            queue_socket("{\"captcha\":990,\"text\":null,\"is_correct\":1}\r\n");
+        ok &= expect_true(-1 == dbc_decode(&client, &cap, "abc", 3, 0),
+                          "dbc_decode timeout=0: returns -1 (image timeout exhausted)");
+        ok &= expect_true((g_now - t_before) >= (time_t)DBC_TIMEOUT,
+                          "dbc_decode timeout=0: simulated time >= DBC_TIMEOUT (60 s)");
+        ok &= expect_true((g_now - t_before) < (time_t)(DBC_TIMEOUT + DBC_DFLT_INTERVAL),
+                          "dbc_decode timeout=0: simulated time < DBC_TIMEOUT + one interval");
+        dbc_close_captcha(&cap);
+
+        /* --- dbc_decode_file (image, type 0) → DBC_TIMEOUT = 60 s --- */
+        g_now = 5000;  t_before = g_now;
+        reset_socket_queue();
+        for (i = 0; i < 30; i++)
+            queue_socket("{\"captcha\":991,\"text\":null,\"is_correct\":1}\r\n");
+        {
+            FILE *tf = fopen("harness_image.bin", "rb");
+            ok &= expect_true(-1 == dbc_decode_file(&client, &cap, tf, 0),
+                              "dbc_decode_file timeout=0: returns -1 (image timeout exhausted)");
+            fclose(tf);
+        }
+        ok &= expect_true((g_now - t_before) >= (time_t)DBC_TIMEOUT,
+                          "dbc_decode_file timeout=0: simulated time >= DBC_TIMEOUT (60 s)");
+        ok &= expect_true((g_now - t_before) < (time_t)(DBC_TIMEOUT + DBC_DFLT_INTERVAL),
+                          "dbc_decode_file timeout=0: simulated time < DBC_TIMEOUT + one interval");
+        dbc_close_captcha(&cap);
+
+        /* --- dbc_decode_recaptcha_v2 → DBC_TOKEN_TIMEOUT = 120 s --- */
+        g_now = 5000;  t_before = g_now;
+        reset_socket_queue();
+        for (i = 0; i < 50; i++)
+            queue_socket("{\"captcha\":992,\"text\":null,\"is_correct\":1}\r\n");
+        ok &= expect_true(-1 == dbc_decode_recaptcha_v2(&client, &cap,
+                                                        "sk", "https://example.com",
+                                                        NULL, NULL, 0),
+                          "dbc_decode_recaptcha_v2 timeout=0: returns -1 (token timeout exhausted)");
+        ok &= expect_true((g_now - t_before) >= (time_t)DBC_TOKEN_TIMEOUT,
+                          "dbc_decode_recaptcha_v2 timeout=0: simulated time >= DBC_TOKEN_TIMEOUT (120 s)");
+        ok &= expect_true((g_now - t_before) < (time_t)(DBC_TOKEN_TIMEOUT + DBC_DFLT_INTERVAL),
+                          "dbc_decode_recaptcha_v2 timeout=0: simulated time < DBC_TOKEN_TIMEOUT + one interval");
+        dbc_close_captcha(&cap);
+
+        /* --- dbc_decode_recaptcha_v3 → DBC_TOKEN_TIMEOUT = 120 s --- */
+        g_now = 5000;  t_before = g_now;
+        reset_socket_queue();
+        for (i = 0; i < 50; i++)
+            queue_socket("{\"captcha\":993,\"text\":null,\"is_correct\":1}\r\n");
+        ok &= expect_true(-1 == dbc_decode_recaptcha_v3(&client, &cap,
+                                                        "sk", "https://example.com",
+                                                        "homepage", 0.5,
+                                                        NULL, NULL, 0),
+                          "dbc_decode_recaptcha_v3 timeout=0: returns -1 (token timeout exhausted)");
+        ok &= expect_true((g_now - t_before) >= (time_t)DBC_TOKEN_TIMEOUT,
+                          "dbc_decode_recaptcha_v3 timeout=0: simulated time >= DBC_TOKEN_TIMEOUT (120 s)");
+        ok &= expect_true((g_now - t_before) < (time_t)(DBC_TOKEN_TIMEOUT + DBC_DFLT_INTERVAL),
+                          "dbc_decode_recaptcha_v3 timeout=0: simulated time < DBC_TOKEN_TIMEOUT + one interval");
+        dbc_close_captcha(&cap);
+
+        /* --- dbc_decode_recaptcha_enterprise → DBC_TOKEN_TIMEOUT = 120 s --- */
+        g_now = 5000;  t_before = g_now;
+        reset_socket_queue();
+        for (i = 0; i < 50; i++)
+            queue_socket("{\"captcha\":994,\"text\":null,\"is_correct\":1}\r\n");
+        ok &= expect_true(-1 == dbc_decode_recaptcha_enterprise(&client, &cap,
+                                                                "sk", "https://example.com",
+                                                                NULL, NULL, 0),
+                          "dbc_decode_recaptcha_enterprise timeout=0: returns -1 (token timeout exhausted)");
+        ok &= expect_true((g_now - t_before) >= (time_t)DBC_TOKEN_TIMEOUT,
+                          "dbc_decode_recaptcha_enterprise timeout=0: simulated time >= DBC_TOKEN_TIMEOUT (120 s)");
+        ok &= expect_true((g_now - t_before) < (time_t)(DBC_TOKEN_TIMEOUT + DBC_DFLT_INTERVAL),
+                          "dbc_decode_recaptcha_enterprise timeout=0: simulated time < DBC_TOKEN_TIMEOUT + one interval");
+        dbc_close_captcha(&cap);
+
+        /* --- dbc_decode_token (hCaptcha, type 4) → DBC_TOKEN_TIMEOUT = 120 s --- */
+        g_now = 5000;  t_before = g_now;
+        reset_socket_queue();
+        for (i = 0; i < 50; i++)
+            queue_socket("{\"captcha\":995,\"text\":null,\"is_correct\":1}\r\n");
+        ok &= expect_true(-1 == dbc_decode_token(&client, &cap,
+                                                 4,
+                                                 "hcaptcha_params",
+                                                 "{\"sitekey\":\"sk\",\"pageurl\":\"https://example.com\"}",
+                                                 0),
+                          "dbc_decode_token timeout=0: returns -1 (token timeout exhausted)");
+        ok &= expect_true((g_now - t_before) >= (time_t)DBC_TOKEN_TIMEOUT,
+                          "dbc_decode_token timeout=0: simulated time >= DBC_TOKEN_TIMEOUT (120 s)");
+        ok &= expect_true((g_now - t_before) < (time_t)(DBC_TOKEN_TIMEOUT + DBC_DFLT_INTERVAL),
+                          "dbc_decode_token timeout=0: simulated time < DBC_TOKEN_TIMEOUT + one interval");
+        dbc_close_captcha(&cap);
+    }
+
     dbc_close(&token_client);
     dbc_close(&client);
     remove("harness_image.bin");

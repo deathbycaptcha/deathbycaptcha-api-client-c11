@@ -187,11 +187,11 @@ int main(int argc, char *argv[])
         if (NULL == captcha || NULL == sitekey || NULL == pageurl) {
             rc = -1;
         } else if (DBC_SAMPLE_TOKEN_V2 == token_mode) {
-            rc = dbc_decode_recaptcha_v2_fn(client, captcha, sitekey, pageurl, proxy, proxytype, DBC_TIMEOUT);
+            rc = dbc_decode_recaptcha_v2_fn(client, captcha, sitekey, pageurl, proxy, proxytype, DBC_TOKEN_TIMEOUT);
         } else if (DBC_SAMPLE_TOKEN_V3 == token_mode) {
-            rc = dbc_decode_recaptcha_v3_fn(client, captcha, sitekey, pageurl, action, min_score, proxy, proxytype, DBC_TIMEOUT);
+            rc = dbc_decode_recaptcha_v3_fn(client, captcha, sitekey, pageurl, action, min_score, proxy, proxytype, DBC_TOKEN_TIMEOUT);
         } else {
-            rc = dbc_decode_recaptcha_enterprise_fn(client, captcha, sitekey, pageurl, proxy, proxytype, DBC_TIMEOUT);
+            rc = dbc_decode_recaptcha_enterprise_fn(client, captcha, sitekey, pageurl, proxy, proxytype, DBC_TOKEN_TIMEOUT);
         }
 
         if (!rc && NULL != captcha) {

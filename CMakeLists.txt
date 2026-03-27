@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(deathbycaptcha-c VERSION 4.7.0 LANGUAGES C)
+project(deathbycaptcha-c VERSION 4.7.1 LANGUAGES C)
 
 include(GNUInstallDirs)
 

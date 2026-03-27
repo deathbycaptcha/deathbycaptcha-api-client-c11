@@ -89,6 +89,39 @@ static void test_recaptcha_parameter_validation(void)
     dbc_close_captcha(&captcha);
 }
 
+/* Verify the default-timeout constants and that dbc_decode_token rejects bad
+ * parameters before attempting any I/O.  These checks are intentionally
+ * independent of any mock infrastructure so they remain fast pure-unit tests.
+ *
+ * Covered per-type contract:
+ *   type  0 (image)                   → DBC_TIMEOUT        (60 s)
+ *   types 1, 4, 5, 6, 7, 10, 12, 13  → DBC_TOKEN_TIMEOUT (120 s)
+ */
+static void test_default_timeout_constants(void)
+{
+    EXPECT_TRUE(DBC_TIMEOUT == 60,
+                "DBC_TIMEOUT (image / type-0 default) is 60 s");
+    EXPECT_TRUE(DBC_TOKEN_TIMEOUT == 120,
+                "DBC_TOKEN_TIMEOUT (all token-based types default) is 120 s");
+    EXPECT_TRUE(DBC_TOKEN_TIMEOUT > DBC_TIMEOUT,
+                "token-based default timeout exceeds image default");
+
+    /* dbc_decode_token must reject bad params before any network I/O. */
+    dbc_captcha cap;
+    dbc_init_captcha(&cap);
+    EXPECT_TRUE(dbc_decode_token(NULL, &cap, 4, NULL,
+                                 "{\"sitekey\":\"sk\",\"pageurl\":\"https://x\"}",
+                                 0) == -1,
+                "dbc_decode_token rejects NULL params_field");
+    EXPECT_TRUE(dbc_decode_token(NULL, &cap, 4, "hcaptcha_params",
+                                 NULL, 0) == -1,
+                "dbc_decode_token rejects NULL params_json");
+    EXPECT_TRUE(dbc_decode_token(NULL, &cap, 4, "hcaptcha_params",
+                                 "not-valid-json", 0) == -1,
+                "dbc_decode_token rejects invalid JSON params");
+    dbc_close_captcha(&cap);
+}
+
 int main(void)
 {
     fprintf(stdout, "Running deathbycaptcha unit tests...\n");
@@ -97,6 +130,7 @@ int main(void)
     test_captcha_lifecycle();
     test_transport_selector();
     test_recaptcha_parameter_validation();
+    test_default_timeout_constants();
 
     if (g_failures > 0) {
         fprintf(stderr, "Unit tests failed: %d\n", g_failures);

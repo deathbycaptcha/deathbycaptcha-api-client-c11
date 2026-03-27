@@ -1226,6 +1226,29 @@ static int dbc_upload_token_challenge(dbc_client *client,
 }
 
 
+int dbc_decode_token(dbc_client *client,
+                     dbc_captcha *captcha,
+                     unsigned int captcha_type,
+                     const char *params_field,
+                     const char *params_json,
+                     unsigned int timeout)
+{
+    if (NULL == params_field || NULL == params_json) {
+        return -1;
+    }
+    cJSON *params = cJSON_Parse(params_json);
+    if (NULL == params) {
+        return -1;
+    }
+    int rc = -1;
+    if (!dbc_upload_token_challenge(client, captcha, captcha_type, params_field, params)) {
+        rc = dbc_wait_captcha_result(client, captcha,
+                                     0 < timeout ? timeout : DBC_TOKEN_TIMEOUT);
+    }
+    cJSON_Delete(params);
+    return rc;
+}
+
 int dbc_decode(dbc_client *client,
                dbc_captcha *captcha,
                const char *buf,
@@ -1285,7 +1308,7 @@ int dbc_decode_recaptcha_v2(dbc_client *client,
                                     DBC_CAPTCHA_TYPE_TOKEN,
                                     "token_params",
                                     params)) {
-        result = dbc_wait_captcha_result(client, captcha, timeout);
+        result = dbc_wait_captcha_result(client, captcha, 0 < timeout ? timeout : DBC_TOKEN_TIMEOUT);
     }
 
     cJSON_Delete(params);
@@ -1332,7 +1355,7 @@ int dbc_decode_recaptcha_v3(dbc_client *client,
                                     DBC_CAPTCHA_TYPE_RECAPTCHA_V3,
                                     "token_params",
                                     params)) {
-        result = dbc_wait_captcha_result(client, captcha, timeout);
+        result = dbc_wait_captcha_result(client, captcha, 0 < timeout ? timeout : DBC_TOKEN_TIMEOUT);
     }
 
     cJSON_Delete(params);
@@ -1371,7 +1394,7 @@ int dbc_decode_recaptcha_enterprise(dbc_client *client,
                                     DBC_CAPTCHA_TYPE_RECAPTCHA_V2_ENTERPRISE,
                                     "token_enterprise_params",
                                     params)) {
-        result = dbc_wait_captcha_result(client, captcha, timeout);
+        result = dbc_wait_captcha_result(client, captcha, 0 < timeout ? timeout : DBC_TOKEN_TIMEOUT);
     }
 
     cJSON_Delete(params);
