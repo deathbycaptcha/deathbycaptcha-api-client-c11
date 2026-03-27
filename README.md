@@ -222,7 +222,7 @@ cmake --preset default && cmake --build --preset default
 cd examples
 gcc -o example.Normal_Captcha \
     example.Normal_Captcha.c \
-    ../build/default/libdeathbycaptcha.so \
+    ../build/default/lib/libdeathbycaptcha.so \
     -I../src
 ./example.Normal_Captcha
 
@@ -249,12 +249,12 @@ This section covers every supported CAPTCHA type, how to compile and run the cor
 cd examples
 
 # Balance check
-gcc -o get_balance get_balance.c ../build/default/libdeathbycaptcha.so -I../src
+gcc -o get_balance get_balance.c ../build/default/lib/libdeathbycaptcha.so -I../src
 ./get_balance
 
 # Standard image CAPTCHA (requires test.jpg in the examples/ directory)
 gcc -o example.Normal_Captcha example.Normal_Captcha.c \
-    ../build/default/libdeathbycaptcha.so -I../src
+    ../build/default/lib/libdeathbycaptcha.so -I../src
 ./example.Normal_Captcha
 ```
 
